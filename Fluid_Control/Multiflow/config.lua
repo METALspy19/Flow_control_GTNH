@@ -12,8 +12,6 @@ function Config.new(name)
     self.inputs = {}
     self.controller = {}
     self.outputs = {}
-    self.states = {}
-    print("run_good")
     return self
 end
 

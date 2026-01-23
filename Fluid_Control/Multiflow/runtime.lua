@@ -196,10 +196,10 @@ function Runtime:outputsFullEnough()
         local t = self.transposers[output.address]
         local tank = t.getFluidInTank(output.source_side)
 
-        if not tank or not tank[1] then return false end
+        if not tank or not tank[output.source_tank] then return false end
 
         local required = output.transfer_unit * self.fillCounts
-        if tank[1].amount < required then
+        if tank[output.source_tank].amount < required then
             return false
         end
     end
