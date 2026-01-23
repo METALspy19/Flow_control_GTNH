@@ -17,14 +17,15 @@ function Config.new(name)
     return self
 end
 
-function Config:addInput(address, source_side, source_tank, sink_side, sink_tank, transfer_unit)
+function Config:addInput(address, source_side, source_tank, sink_side, sink_tank, transfer_unit, fluid)
     local input = {
         address = address,
         source_side = source_side,
         source_tank = source_tank,
         sink_side = sink_side,
         sink_tank = sink_tank,
-        transfer_unit = transfer_unit
+        transfer_unit = transfer_unit,
+        fluid = fluid
     }
     table.insert(self.inputs, input)
     return #self.inputs
