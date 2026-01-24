@@ -25,7 +25,10 @@ function Manager.loadRuntimesFromConfigs(cfgFolder)
     return self
 end
 
-function Manager:run(runtime)
+function Manager:tickAll()
+    for _, system in ipairs(self.Runtimes) do
+        system:tick()
+    end
 end
 
 return Manager
