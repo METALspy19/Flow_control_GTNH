@@ -6,6 +6,9 @@ local pp = require("pretty_serialize")
 Config = {}
 Config.__index = Config
 
+---comment
+---@param name string
+---@return table
 function Config.new(name)
     local self = setmetatable({}, Config)
     self.name = name
@@ -15,6 +18,13 @@ function Config.new(name)
     return self
 end
 
+---@param address string
+---@param source_side number
+---@param source_tank number
+---@param sink_side number
+---@param sink_tank number
+---@param transfer_unit number
+---@param fluid string
 function Config:addInput(address, source_side, source_tank, sink_side, sink_tank, transfer_unit, fluid)
     local input = {
         address = address,
@@ -29,6 +39,13 @@ function Config:addInput(address, source_side, source_tank, sink_side, sink_tank
     return #self.inputs
 end
 
+---@param address string
+---@param source_side number
+---@param source_tank number
+---@param sink_side number
+---@param sink_tank number
+---@param transfer_unit number
+---@param fluid string
 function Config:addOutput(address, source_side, source_tank, sink_side, sink_tank, transfer_unit, fluid)
     local output = {
         address = address,
@@ -43,6 +60,8 @@ function Config:addOutput(address, source_side, source_tank, sink_side, sink_tan
     return #self.outputs
 end
 
+---@param address string
+---@param side number
 function Config:addPlainRedstoneSignalController(address, side)
     local controller = {
         address = address,

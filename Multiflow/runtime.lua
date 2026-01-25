@@ -3,9 +3,18 @@ local serialization = require("serialization")
 local filesystem = require("filesystem")
 local pp = require("pretty_serialize")
 
+local Config = require("Multiflow.config")
+
+
+---@class Runtime
+---@field config table
+---@field STATES table
+---@field DEFAULT_STATE string
 Runtime = {}
 Runtime.__index = Runtime
 
+
+---@param configTable_or_Path table|string
 function Runtime.loadConfig(configTable_or_Path)
     local self = setmetatable({}, Runtime)
     if type(configTable_or_Path) == "table" then
@@ -13,10 +22,11 @@ function Runtime.loadConfig(configTable_or_Path)
         return self
     elseif type(configTable_or_Path) == "string" then
         if filesystem.exists(configTable_or_Path) then
-            local file <close> = io.open(configTable_or_Path, "r")
+            local file = io.open(configTable_or_Path, "r")
             if file then
                 local data = file:read("*a")
                 self.config = serialization.unserialize(data)
+                file:close()
                 return self
             end
         end
@@ -26,10 +36,12 @@ function Runtime.loadConfig(configTable_or_Path)
     end
 end
 
+---@param toPath string
 function Runtime:saveConfig(toPath)
-    local file <close> = io.open(toPath, "w")
+    local file = io.open(toPath, "w")
     if file then
         file:write(pp.serialize(self.config))
+        file:close()
         return true
     end
     return false
@@ -81,6 +93,11 @@ function Runtime:updateTankCache()
     end
 end
 
+---comment
+---@param address string
+---@param side number
+---@param tank number
+---@return table|nil
 function Runtime:getTank(address, side, tank)
     local a = self._tankCache and self._tankCache[address]
     local s = a and a[side]
@@ -212,4 +229,4 @@ function Runtime:tankMatchesFluid(tank, expected)
     return tank.name == expected
 end
 
-return Runtime
+return Runtime, Config

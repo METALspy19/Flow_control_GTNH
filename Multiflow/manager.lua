@@ -1,14 +1,15 @@
-local component = require("component")
-local serialization = require("serialization")
-local filesystem = require("filesystem")
-local pp = require("pretty_serialize")
+local component       = require("component")
+local serialization   = require("serialization")
+local filesystem      = require("filesystem")
+local Runtime, Config = require("Multiflow.runtime")
 
 
 Manager = {}
 Manager.__index = Manager
 
 Manager._VERSION = "0.0.1"
-
+---@alias Path string
+---@param cfgFolder Path
 function Manager.loadRuntimesFromConfigs(cfgFolder)
     local self = setmetatable({}, Manager)
 
@@ -31,4 +32,4 @@ function Manager:tickAll()
     end
 end
 
-return Manager
+return Manager, Runtime, Config
