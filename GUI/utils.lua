@@ -7,8 +7,8 @@ utils.__index = utils
 
 function utils.config()
     return {
-        BACKGROUND_COLOR = 0x000000,
-        FOREGROUND_COLOR = 0xFFFFFF,
+        BACKGROUND_COLOR = { color = colors.purple, palette = true },
+        FOREGROUND_COLOR = { color = colors.white, palette = true },
         SIZE = { x = 80, y = 25 }
     }
 end

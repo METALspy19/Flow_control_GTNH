@@ -1,47 +1,52 @@
 local gpu     = require("component").gpu
 local utils   = require("GUI.utils")
+local unicode = require("unicode")
 
 local Input   = {}
 Input.__index = Input
 
 
----@param x number
----@param y number
----@param w number
+---@param size {x:integer,y:integer,w:integer,h?:integer}
+---@param colors? {default_background:color,focused_background:color}
 ---@param placeholder string
----@param default_background? number
----@param focused_background? number
 ---@param bind {table:table,key:string}
-function Input.new(x, y, w, placeholder, default_background, focused_background, bind)
+function Input.new(size, placeholder, colors, bind)
     return setmetatable({
-        x = x,
-        y = y,
-        w = w,
-        h = 1,
+        x = tonumber(size.x),
+        y = tonumber(size.y),
+        w = tonumber(size.w),
+        h = tonumber(size.h) or 1,
         -- binding
         bind = bind, -- { table = ..., key = ... }
 
         -- fallback if unbound
         text = "",
+
         placeholder = placeholder or "",
-        default_background = default_background or utils:config().BACKGROUND_COLOR,
-        focused_background = focused_background or default_background or utils:config().BACKGROUND_COLOR,
+        default_background = colors and colors.default_background or utils:config().BACKGROUND_COLOR,
+        focused_background = colors and colors.focused_background or colors and colors.default_background or
+            utils:config().BACKGROUND_COLOR,
         focused = false
     }, Input)
 end
 
 function Input:draw()
-    gpu.setBackground(self.focused and self.focused_background or self.default_background)
+    local oldColor, oldPalette = gpu.getBackground()
+    local bg_col = self.focused and self.focused_background or self.default_background
+    gpu.setBackground(bg_col.color, bg_col.palette)
 
     gpu.set(self.x, self.y, string.rep(" ", self.w))
 
     local text = self:getText()
     local t = (#text > 0) and text or self.placeholder
-    gpu.set(self.x, self.y, t:sub(1, self.w))
 
     if self.focused then
+        gpu.set(self.x, self.y, text:sub(1, self.w))
         gpu.set(self.x + #text, self.y, "_")
+    else
+        gpu.set(self.x, self.y, t:sub(1, self.w))
     end
+    gpu.setBackground(oldColor, oldPalette)
 end
 
 function Input:getText()
@@ -64,23 +69,30 @@ end
 function Input:handle(e)
     if e[1] == "touch" then
         if utils.inside(self, e[3], e[4]) then
-            -- self.appref:raise(self) -- 👈 bring forward
             self.focused = true
             return { draw = true, consume = true }
         else
             self.focused = false
             return { draw = true, consume = false }
         end
+    elseif self.focused and e[1] == "clipboard" then
+        -- e[3] contains the pasted text
+        local text = self:getText()
+        local pasted = e[3]:gsub("[\r\n]", "")
+        text = text .. pasted
+        self:setText(text)
+        return { draw = true, consume = true }
     elseif self.focused and e[1] == "key_down" then
         local c = e[3]
+        local code = e[4]
         local text = self:getText()
 
-        if c == 8 then
+        if code == 14 then
             text = text:sub(1, -2)
-        elseif c == 13 then
+        elseif code == 28 then
             self.focused = false
-        elseif c >= 32 and c <= 126 then
-            text = text .. string.char(c)
+        elseif c > 0 then
+            text = text .. unicode.char(c)
         end
 
         self:setText(text)

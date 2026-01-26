@@ -58,8 +58,7 @@ function App:draw()
     for i = 1, #list do
         local w = list[i]
         if w.draw then w:draw() end
-        gpu.setBackground(utils.config().BACKGROUND_COLOR)
-        gpu.setForeground(utils.config().FOREGROUND_COLOR)
+        local color_cfg = utils.config()
     end
 end
 
@@ -70,13 +69,13 @@ function App:run()
     while self.running do
         local page = self.activePage
         assert(page and page.widgets, "Active page invalid")
+        self:draw()
         local e = { event.pull() }
         if e[1] == "interrupted" then self.running = false end
         for i = #self.activePage.widgets, 1, -1 do
             local w = self.activePage.widgets[i]
             local widg_hand = w.handle and w:handle(e)
             if widg_hand.draw then
-                self:draw()
                 if widg_hand.consume then
                     break
                 end
@@ -101,8 +100,9 @@ end
 
 local Button = require("GUI.widgets.Button")
 local Input = require("GUI.widgets.Input")
+local NumericInput = require("GUI.widgets.NumericInput")
 
 return {
     App = App,
-    Widgets = { Button = Button, Input = Input }
+    Widgets = { Button = Button, Input = Input, NumericInput = NumericInput }
 }
