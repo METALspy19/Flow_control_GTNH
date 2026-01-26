@@ -4,10 +4,12 @@ local utils       = require("GUI.utils")
 local NumericIn   = {}
 NumericIn.__index = NumericIn
 
+
+---@alias indexmap table<number, string>
 ---@param size {x:integer,y:integer,w:integer,buttonWidth:integer,h?:integer}
 ---@param texts {neg:string,pos:string,invalid:string}
----@param colors {default_background:color,button_background:color}}
----@param bind {table:table,key:string}
+---@param colors {default_background:color,button_background:color}
+---@param bind {table:table,key:string,map:indexmap?}
 ---@param limits {step?:integer,max?:integer,min?:integer}
 ---@param onValueChanged? function
 function NumericIn.new(size, texts, colors, bind, limits, onValueChanged)
@@ -19,10 +21,12 @@ function NumericIn.new(size, texts, colors, bind, limits, onValueChanged)
         h = tonumber(size.h) or 1,
         -- binding
         bind = bind, -- { table = ..., key = ... }
-        step = limits.step or 1,
+        step = limits and limits.step or 1,
 
-        max = limits.max,
-        min = limits.min,
+
+        max = limits and limits.max,
+        min = limits and limits.min,
+
         onValueChanged = onValueChanged,
 
         -- fallback if unbound
@@ -60,12 +64,21 @@ function NumericIn:draw()
     gpu.setBackground(self.default_background.color, self.default_background.palette)
     gpu.set(self.x + self.buttonWidth, self.y + math.floor((self.h - 1) / 2),
         string.rep(" ", self.w - 2 * self.buttonWidth))
-    gpu.set(
-        self.x + self.buttonWidth + math.floor((self.w - 2 * self.buttonWidth) / 2) - math.floor(#tostring(value) / 2),
-        self.y + math.floor((self.h - 1) / 2),
-        tostring(value):sub(1, self.w - 2 * self.buttonWidth))
 
-
+    local label = self.bind.map and self.bind.map[value]
+    if label then
+        gpu.set(
+            self.x + self.buttonWidth + math.floor((self.w - 2 * self.buttonWidth) / 2) -
+            math.floor(#label / 2),
+            self.y + math.floor((self.h - 1) / 2),
+            label:sub(1, self.w - 2 * self.buttonWidth))
+    else
+        gpu.set(
+            self.x + self.buttonWidth + math.floor((self.w - 2 * self.buttonWidth) / 2) -
+            math.floor(#tostring(value) / 2),
+            self.y + math.floor((self.h - 1) / 2),
+            tostring(value):sub(1, self.w - 2 * self.buttonWidth))
+    end
 
     gpu.setBackground(self.button_background.color, self.button_background.palette)
     for i = 0, self.h - 1 do

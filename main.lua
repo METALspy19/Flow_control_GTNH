@@ -1,6 +1,8 @@
 local flowcontrol = require("Multiflow")
 local GUI = require("GUI")
 local colors = require("colors")
+local sides = require("sides")
+local component = require("component")
 local App = GUI.App.new()
 
 local label_bg = { color = colors.black, palette = true }
@@ -8,6 +10,17 @@ local input_bg2 = { color = colors.purple, palette = true }
 local input_bg3 = { color = colors.green, palette = true }
 local input_bg4 = { color = colors.red, palette = true }
 local input_focus = { color = 0x878787, palette = false }
+
+---@type indexmap
+local direction_names = {
+    [-1] = "NONE",
+    [0] = "DOWN",
+    [1] = "UP",
+    [2] = "NORTH",
+    [3] = "SOUTH",
+    [4] = "WEST",
+    [5] = "EAST",
+}
 
 local newConfig_form_data = {
     name = "",
@@ -29,10 +42,10 @@ io_config.__index = io_config
 function io_config.new()
     local self = setmetatable({}, io_config)
     self.address = ""
-    self.source_side = ""
-    self.source_tank = ""
-    self.sink_side = ""
-    self.sink_tank = ""
+    self.source_side = -1
+    self.source_tank = 0
+    self.sink_side = -1
+    self.sink_tank = 0
     self.fluid = ""
     return self
 end
@@ -191,6 +204,77 @@ App:add(GUI.Widgets.Input.new(
         { default_background = input_bg2, focused_background = input_focus },
         { table = currentIO, key = "address" }),
     "IOConfig")
+
+App:add(GUI.Widgets.NumericInput.new(
+        { x = 19, y = 5, w = 50, buttonWidth = 3, h = 1 },
+        { neg = "<", pos = ">", invalid = "" },
+        { default_background = input_bg2, button_background = input_focus },
+        { table = currentIO, key = "source_side", map = direction_names }, { step = 1, max = 5, min = 0 }),
+    "IOConfig")
+App:add(GUI.Widgets.NumericInput.new(
+        { x = 19, y = 7, w = 50, buttonWidth = 3, h = 1 }, { neg = "-", pos = "+", invalid = "" },
+        { default_background = input_bg2, button_background = input_focus },
+        { table = currentIO, key = "source_tank" }, { step = 1, max = 20, min = 1 }),
+    "IOConfig")
+App:add(GUI.Widgets.NumericInput.new(
+        { x = 19, y = 9, w = 50, buttonWidth = 3, h = 1 }, { neg = "<", pos = ">", invalid = "" },
+        { default_background = input_bg2, button_background = input_focus },
+        { table = currentIO, key = "sink_side", map = direction_names }, { step = 1, max = 5, min = 0 }),
+    "IOConfig")
+App:add(GUI.Widgets.NumericInput.new(
+        { x = 19, y = 11, w = 50, buttonWidth = 3, h = 1 }, { neg = "-", pos = "+", invalid = "" },
+        { default_background = input_bg2, button_background = input_focus },
+        { table = currentIO, key = "sink_tank" }, { step = 1, max = 20, min = 1 }),
+    "IOConfig")
+App:add(GUI.Widgets.Input.new(
+        { x = 3, y = 13, w = 76, h = 1 }, "Fluid name",
+        { default_background = input_bg2, focused_background = input_focus },
+        { table = currentIO, key = "fluid" }),
+    "IOConfig")
+
+
+-- App:add(
+--     GUI.Widgets.Button.new(
+--         { x = 20, y = 20, w = 40, h = 3 },
+--         { table = { text = "Validate" }, key = "text" },
+--         { default_background = input_bg2 },
+--         function() end),
+--     "IOConfig")
+
+local scanned_fluid = ""
+
+App:add(
+    GUI.Widgets.Button.new(
+        { x = 20, y = 20, w = 40, h = 3 },
+        { table = { text = "Scan for fluid" }, key = "text" },
+        { default_background = input_bg2 },
+        function()
+            if currentIO.source_side and currentIO.source_tank and currentIO.address then
+                local scan = component.proxy(currentIO.address).getFluidInTank(currentIO.source_side)
+                if scan then
+                    if scan[currentIO.source_tank] then
+                        local new_name = scan[currentIO.source_tank].name
+                        if new_name then
+                            currentIO.fluid = tostring(new_name)
+                        else
+                            currentIO.fluid = "No fluid in tank"
+                        end
+                    else
+                        currentIO.fluid = "No tank with this index"
+                    end
+                else
+                    currentIO.fluid = "No fluid tank block detected"
+                end
+            end
+        end),
+    "IOConfig")
+
+-- App:add(
+--     GUI.Widgets.Button.new(
+--         { x = 20, y = 20, w = 40, h = 3 },
+--         { table = { text = "Validate" }, key = "text" },
+--         { default_background = input_bg2 }),
+--     "IOConfig")
 
 App:add(IO_index_swich, "IOConfig")
 
