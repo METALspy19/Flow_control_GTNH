@@ -3,9 +3,9 @@
 -- local filesystem = require("filesystem")
 
 -- local pp = require("pretty_serialize")
-local Manager, Runtime, Config = require("Multiflow.manager")
--- local Runtime = require("runtime")
--- local Config = require("config")
+local Manager = require("Multiflow.manager")
+local Runtime = require("Multiflow.runtime")
+local Config = require("Multiflow.config")
 
 return {
     Manager = Manager,

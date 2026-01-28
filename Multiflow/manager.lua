@@ -1,7 +1,7 @@
-local component       = require("component")
-local serialization   = require("serialization")
-local filesystem      = require("filesystem")
-local Runtime, Config = require("Multiflow.runtime")
+local component     = require("component")
+local serialization = require("serialization")
+local filesystem    = require("filesystem")
+local Runtime       = require("Multiflow.runtime")
 
 
 Manager = {}
@@ -32,4 +32,4 @@ function Manager:tickAll()
     end
 end
 
-return Manager, Runtime, Config
+return Manager

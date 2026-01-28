@@ -278,11 +278,10 @@ App:add(GUI.Widgets.Input.new(
         { default_background = input_bg2, focused_background = input_focus },
         { table = currentIO, key = "fluid" }),
     "IOConfig")
-
-App:add(GUI.Widgets.Input.new(
-        { x = 3, y = 15, w = 57, h = 1 }, "Recipe amount / Transfer Rate",
-        { default_background = input_bg2, focused_background = input_focus },
-        { table = currentIO, key = "transfer_unit" }),
+App:add(GUI.Widgets.NumericInput.new(
+        { x = 40, y = 15, w = 39, buttonWidth = 3, h = 1 }, { neg = "-", pos = "+", invalid = "" },
+        { default_background = input_bg2, button_background = input_focus },
+        { table = currentIO, key = "transfer_unit" }, { step = 1000, max = 800000, min = 0 }),
     "IOConfig")
 
 App:add(GUI.Widgets.Button.new(
@@ -303,6 +302,11 @@ App:add(GUI.Widgets.Button.new(
 App:add(GUI.Widgets.Button.new(
         { x = 3, y = 11, w = 9, h = 1 },
         { table = { text = "Sink Tank" }, key = "text" },
+        { default_background = label_bg }),
+    "IOConfig")
+App:add(GUI.Widgets.Button.new(
+        { x = 3, y = 15, w = 27, h = 1 },
+        { table = { text = "Recipe Amount/Transfer Unit" }, key = "text" },
         { default_background = label_bg }),
     "IOConfig")
 

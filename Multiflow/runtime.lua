@@ -229,4 +229,4 @@ function Runtime:tankMatchesFluid(tank, expected)
     return tank.name == expected
 end
 
-return Runtime, Config
+return Runtime
