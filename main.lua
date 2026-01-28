@@ -29,6 +29,10 @@ local newConfig_form_data = {
     controller_type = nil
 }
 
+
+---@class io_state
+---@field inputs table<io_config>
+---@field outputs table<io_config>
 local io_state = {
     mode = "input", -- or "output"
     index = 1,      -- current IO being configured
@@ -36,7 +40,14 @@ local io_state = {
     outputs = {}
 }
 
-
+---@class io_config
+---@field address string
+---@field source_side integer
+---@field source_tank integer
+---@field sink_side integer
+---@field sink_tank integer
+---@field transfer_unit integer
+---@field fluid string
 local io_config = {}
 io_config.__index = io_config
 function io_config.new()
@@ -46,6 +57,7 @@ function io_config.new()
     self.source_tank = 0
     self.sink_side = -1
     self.sink_tank = 0
+    self.transfer_unit = 0
     self.fluid = ""
     return self
 end
@@ -185,7 +197,42 @@ App:add(
 App:add(
     GUI.Widgets.Button.new({ x = 60, y = 21, w = 20, h = 3 }, { table = { text = "Save" }, key = "text" },
         { default_background = input_bg2 },
-        function() App:switch("Main") end), "NewConfig")
+        function()
+            for _, io in ipairs(io_state.inputs) do
+                if #io.address < 1
+                    or #io.fluid < 1
+                    or io.source_side == -1
+                    or io.source_tank < 1
+                    or io.sink_side == -1
+                    or io.transfer_unit <= 0
+                    or io.sink_tank < 1 then
+                    return
+                end
+            end
+            for _, io in ipairs(io_state.outputs) do
+                if #io.address < 1
+                    or #io.fluid < 1
+                    or io.source_side == -1
+                    or io.source_tank < 1
+                    or io.sink_side == -1
+                    or io.transfer_unit <= 0
+                    or io.sink_tank < 1 then
+                    return
+                end
+            end
+            local config = flowcontrol.Config.new()
+            for _, io in ipairs(io_state.inputs) do
+                config:addInput(io.address, io.source_side, io.source_tank, io.sink_side, io.sink_tank, io.transfer_unit,
+                    io.fluid)
+            end
+            for _, io in ipairs(io_state.outputs) do
+                config:addOutput(io.address, io.source_side, io.source_tank, io.sink_side, io.sink_tank, io
+                    .transfer_unit, io.fluid)
+            end
+            config:addPlainRedstoneSignalController("default_addr", 0)
+            local saveAgent = flowcontrol.Runtime.loadConfig(config):saveConfig("/home/FluidControl/" ..
+                newConfig_form_data.name .. ".cfg")
+        end), "NewConfig")
 
 ---------------------------------------------------------------------------
 App:newPage("IOConfig")
@@ -206,46 +253,64 @@ App:add(GUI.Widgets.Input.new(
     "IOConfig")
 
 App:add(GUI.Widgets.NumericInput.new(
-        { x = 19, y = 5, w = 50, buttonWidth = 3, h = 1 },
+        { x = 40, y = 5, w = 39, buttonWidth = 3, h = 1 },
         { neg = "<", pos = ">", invalid = "" },
         { default_background = input_bg2, button_background = input_focus },
         { table = currentIO, key = "source_side", map = direction_names }, { step = 1, max = 5, min = 0 }),
     "IOConfig")
 App:add(GUI.Widgets.NumericInput.new(
-        { x = 19, y = 7, w = 50, buttonWidth = 3, h = 1 }, { neg = "-", pos = "+", invalid = "" },
+        { x = 40, y = 7, w = 39, buttonWidth = 3, h = 1 }, { neg = "-", pos = "+", invalid = "" },
         { default_background = input_bg2, button_background = input_focus },
         { table = currentIO, key = "source_tank" }, { step = 1, max = 20, min = 1 }),
     "IOConfig")
 App:add(GUI.Widgets.NumericInput.new(
-        { x = 19, y = 9, w = 50, buttonWidth = 3, h = 1 }, { neg = "<", pos = ">", invalid = "" },
+        { x = 40, y = 9, w = 39, buttonWidth = 3, h = 1 }, { neg = "<", pos = ">", invalid = "" },
         { default_background = input_bg2, button_background = input_focus },
         { table = currentIO, key = "sink_side", map = direction_names }, { step = 1, max = 5, min = 0 }),
     "IOConfig")
 App:add(GUI.Widgets.NumericInput.new(
-        { x = 19, y = 11, w = 50, buttonWidth = 3, h = 1 }, { neg = "-", pos = "+", invalid = "" },
+        { x = 40, y = 11, w = 39, buttonWidth = 3, h = 1 }, { neg = "-", pos = "+", invalid = "" },
         { default_background = input_bg2, button_background = input_focus },
         { table = currentIO, key = "sink_tank" }, { step = 1, max = 20, min = 1 }),
     "IOConfig")
 App:add(GUI.Widgets.Input.new(
-        { x = 3, y = 13, w = 76, h = 1 }, "Fluid name",
+        { x = 3, y = 13, w = 57, h = 1 }, "Fluid name",
         { default_background = input_bg2, focused_background = input_focus },
         { table = currentIO, key = "fluid" }),
     "IOConfig")
 
+App:add(GUI.Widgets.Input.new(
+        { x = 3, y = 15, w = 57, h = 1 }, "Recipe amount / Transfer Rate",
+        { default_background = input_bg2, focused_background = input_focus },
+        { table = currentIO, key = "transfer_unit" }),
+    "IOConfig")
 
--- App:add(
---     GUI.Widgets.Button.new(
---         { x = 20, y = 20, w = 40, h = 3 },
---         { table = { text = "Validate" }, key = "text" },
---         { default_background = input_bg2 },
---         function() end),
---     "IOConfig")
+App:add(GUI.Widgets.Button.new(
+        { x = 3, y = 5, w = 11, h = 1 },
+        { table = { text = "Source Side" }, key = "text" },
+        { default_background = label_bg }),
+    "IOConfig")
+App:add(GUI.Widgets.Button.new(
+        { x = 3, y = 7, w = 11, h = 1 },
+        { table = { text = "Source Tank" }, key = "text" },
+        { default_background = label_bg }),
+    "IOConfig")
+App:add(GUI.Widgets.Button.new(
+        { x = 3, y = 9, w = 9, h = 1 },
+        { table = { text = "Sink Side" }, key = "text" },
+        { default_background = label_bg }),
+    "IOConfig")
+App:add(GUI.Widgets.Button.new(
+        { x = 3, y = 11, w = 9, h = 1 },
+        { table = { text = "Sink Tank" }, key = "text" },
+        { default_background = label_bg }),
+    "IOConfig")
 
-local scanned_fluid = ""
+
 
 App:add(
     GUI.Widgets.Button.new(
-        { x = 20, y = 20, w = 40, h = 3 },
+        { x = 63, y = 13, w = 16, h = 1 },
         { table = { text = "Scan for fluid" }, key = "text" },
         { default_background = input_bg2 },
         function()
